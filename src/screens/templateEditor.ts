@@ -28,6 +28,34 @@ export class TemplateEditor {
     const b1 = btns[0] || { label: "", url: "" };
     const b2 = btns[1] || { label: "", url: "" };
 
+    // Determine initial timer mode & inputs
+    let timerMode = "none";
+    let timerHours = 1;
+    let timerMins = 30;
+
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (act.timestamps?.start) {
+      let sec = act.timestamps.start;
+      if (sec > 20000000000) sec = Math.floor(sec / 1000);
+      const diff = Math.max(0, nowSec - sec);
+      if (diff > 30) {
+        timerMode = "custom_elapsed";
+        timerHours = Math.floor(diff / 3600);
+        timerMins = Math.floor((diff % 3600) / 60);
+      } else {
+        timerMode = "elapsed";
+      }
+    } else if (act.timestamps?.end) {
+      timerMode = "countdown";
+      let sec = act.timestamps.end;
+      if (sec > 20000000000) sec = Math.floor(sec / 1000);
+      const diff = Math.max(0, sec - nowSec);
+      timerHours = Math.floor(diff / 3600);
+      timerMins = Math.floor((diff % 3600) / 60);
+    }
+
+    const showOffsets = timerMode === "custom_elapsed" || timerMode === "countdown";
+
     this.container.innerHTML = `
       <div class="main-col">
         <!-- Tabs -->
@@ -55,9 +83,25 @@ export class TemplateEditor {
             </div>
             <div class="field-row"><div class="field"><label>Details (line 1)</label><input type="text" id="inp-act-details" value="${ea(act.details||"")}"></div></div>
             <div class="field-row"><div class="field"><label>State (line 2)</label><input type="text" id="inp-act-state" value="${ea(act.state||"")}"></div></div>
-            <div class="checkbox-row">
-              <input type="checkbox" id="chk-timer"${act.timestamps?.start?' checked':''}>
-              <label for="chk-timer" style="cursor:pointer;text-transform:none;font-weight:500;font-size:13px;">Show live counting elapsed timer</label>
+            
+            <div class="field-row" style="margin-top:12px;align-items:flex-end;">
+              <div class="field" style="flex:2;">
+                <label>Timer & Elapsed Mode</label>
+                <select id="inp-timer-mode">
+                  <option value="none"${timerMode==='none'?' selected':''}>Disabled (No timer)</option>
+                  <option value="elapsed"${timerMode==='elapsed'?' selected':''}>Live Elapsed (Starts at 00:00)</option>
+                  <option value="custom_elapsed"${timerMode==='custom_elapsed'?' selected':''}>Custom Elapsed Offset (e.g. Started 1h 30m ago)</option>
+                  <option value="countdown"${timerMode==='countdown'?' selected':''}>Countdown Timer (e.g. Ends in X mins/hours)</option>
+                </select>
+              </div>
+              <div class="field" id="wrap-timer-hours" style="display:${showOffsets?'flex':'none'};flex:1;">
+                <label id="lbl-timer-hours">Hours</label>
+                <input type="number" id="inp-timer-hours" min="0" max="99" value="${timerHours}">
+              </div>
+              <div class="field" id="wrap-timer-mins" style="display:${showOffsets?'flex':'none'};flex:1;">
+                <label id="lbl-timer-mins">Minutes</label>
+                <input type="number" id="inp-timer-mins" min="0" max="59" value="${timerMins}">
+              </div>
             </div>
           ` : ''}
 
@@ -122,7 +166,7 @@ export class TemplateEditor {
               <div class="activity-name" id="prev-title">${eh(act.name||"App Name")}</div>
               <div class="activity-line" id="prev-details">${eh(act.details||"")}</div>
               <div class="activity-line muted" id="prev-state">${eh(act.state||"")}</div>
-              <div class="activity-timer" id="prev-timer" style="display:${act.timestamps?.start?'block':'none'}">00:00 elapsed</div>
+              <div class="activity-timer" id="prev-timer" style="display:${(act.timestamps?.start||act.timestamps?.end)?'block':'none'}">00:00 elapsed</div>
             </div>
           </div>
         </div>
@@ -155,9 +199,21 @@ export class TemplateEditor {
     if (l1&&u1) btns.push({label:l1,url:u1});
     if (l2&&u2) btns.push({label:l2,url:u2});
 
-    const chk = this.container.querySelector("#chk-timer") as HTMLInputElement;
-    const showTimer = chk ? chk.checked : !!this.currentTemplate.activity.timestamps?.start;
-    const timestamps = showTimer ? {start:Math.floor(Date.now()/1000)} : undefined;
+    const mode = v("inp-timer-mode") || "none";
+    const h = Math.max(0, parseInt(v("inp-timer-hours") || "0", 10) || 0);
+    const m = Math.max(0, Math.min(59, parseInt(v("inp-timer-mins") || "0", 10) || 0));
+    const nowSec = Math.floor(Date.now() / 1000);
+
+    let timestamps = undefined;
+    if (mode === "elapsed") {
+      timestamps = { start: nowSec };
+    } else if (mode === "custom_elapsed") {
+      const offsetSec = (h * 3600) + (m * 60);
+      timestamps = { start: nowSec - offsetSec };
+    } else if (mode === "countdown") {
+      const durationSec = (h * 3600) + (m * 60);
+      timestamps = { end: nowSec + durationSec };
+    }
 
     this.currentTemplate = {id:this.currentTemplate.id,name,activity:{name:actName,details,state,type:actType,timestamps,assets,buttons:btns.length>0?btns:undefined}};
     return this.currentTemplate;
@@ -187,6 +243,23 @@ export class TemplateEditor {
     bind("inp-small-img", v => { if(!this.currentTemplate.activity.assets)this.currentTemplate.activity.assets={}; this.currentTemplate.activity.assets.small_image=v||undefined; });
     bind("inp-small-txt", v => { if(!this.currentTemplate.activity.assets)this.currentTemplate.activity.assets={}; this.currentTemplate.activity.assets.small_text=v||undefined; });
 
+    const updateTimerVisibility = () => {
+      const modeSel = this.container.querySelector("#inp-timer-mode") as HTMLSelectElement;
+      const wrapH = this.container.querySelector("#wrap-timer-hours") as HTMLElement;
+      const wrapM = this.container.querySelector("#wrap-timer-mins") as HTMLElement;
+      if (modeSel && wrapH && wrapM) {
+        const show = modeSel.value === "custom_elapsed" || modeSel.value === "countdown";
+        wrapH.style.display = show ? "flex" : "none";
+        wrapM.style.display = show ? "flex" : "none";
+      }
+      this.collectFormData();
+      this.updatePreview();
+    };
+
+    this.container.querySelector("#inp-timer-mode")?.addEventListener("change", updateTimerVisibility);
+    this.container.querySelector("#inp-timer-hours")?.addEventListener("input", updateTimerVisibility);
+    this.container.querySelector("#inp-timer-mins")?.addEventListener("input", updateTimerVisibility);
+
     const updateBtns = () => {
       const g = (id:string) => (this.container.querySelector(`#${id}`) as HTMLInputElement)?.value||"";
       const btns = [];
@@ -196,12 +269,6 @@ export class TemplateEditor {
       this.updatePreview();
     };
     ["inp-btn1-label","inp-btn1-url","inp-btn2-label","inp-btn2-url"].forEach(id => this.container.querySelector(`#${id}`)?.addEventListener("input",updateBtns));
-
-    const chk = this.container.querySelector("#chk-timer") as HTMLInputElement;
-    if(chk) chk.addEventListener("change",()=>{
-      this.currentTemplate.activity.timestamps = chk.checked ? {start:Math.floor(Date.now()/1000)} : undefined;
-      this.updatePreview();
-    });
 
     this.container.querySelector("#btn-save")?.addEventListener("click",()=>{
       this.onSave(this.collectFormData()); toast("Preset saved!");
@@ -220,11 +287,30 @@ export class TemplateEditor {
     const s = el("prev-state"); if(s) s.textContent = a.state||"";
     const tm = el("prev-timer") as HTMLElement;
     if(tm){
+      const nowSec = Math.floor(Date.now() / 1000);
       if(a.timestamps?.start){
         let sec = a.timestamps.start;
         if(sec>20000000000) sec = Math.floor(sec/1000);
-        const elapsed = Math.max(0,Math.floor(Date.now()/1000)-sec);
-        tm.textContent = `${String(Math.floor(elapsed/60)).padStart(2,'0')}:${String(elapsed%60).padStart(2,'0')} elapsed`;
+        const elapsed = Math.max(0, nowSec - sec);
+        const hrs = Math.floor(elapsed / 3600);
+        const mins = Math.floor((elapsed % 3600) / 60);
+        const secs = elapsed % 60;
+        const timeStr = hrs > 0
+          ? `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`
+          : `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+        tm.textContent = `${timeStr} elapsed`;
+        tm.style.display = "block";
+      } else if (a.timestamps?.end) {
+        let sec = a.timestamps.end;
+        if(sec>20000000000) sec = Math.floor(sec/1000);
+        const remaining = Math.max(0, sec - nowSec);
+        const hrs = Math.floor(remaining / 3600);
+        const mins = Math.floor((remaining % 3600) / 60);
+        const secs = remaining % 60;
+        const timeStr = hrs > 0
+          ? `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`
+          : `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+        tm.textContent = `${timeStr} remaining`;
         tm.style.display = "block";
       } else { tm.style.display = "none"; }
     }

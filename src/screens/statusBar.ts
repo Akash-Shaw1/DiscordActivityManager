@@ -7,10 +7,12 @@ const GEAR_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" st
 export class StatusBar {
   private container: HTMLElement;
   private onOpenSettings: () => void;
+  private onClearStatus: () => void;
 
-  constructor(container: HTMLElement, onOpenSettings: () => void) {
+  constructor(container: HTMLElement, onOpenSettings: () => void, onClearStatus: () => void) {
     this.container = container;
     this.onOpenSettings = onOpenSettings;
+    this.onClearStatus = onClearStatus;
   }
 
   public render(status: StatusPayload) {
@@ -53,7 +55,7 @@ export class StatusBar {
     `;
 
     this.container.querySelector("#btn-reconnect")?.addEventListener("click", () => api.connectDiscord());
-    this.container.querySelector("#btn-clear-status")?.addEventListener("click", () => api.clearActivity());
+    this.container.querySelector("#btn-clear-status")?.addEventListener("click", () => this.onClearStatus());
     this.container.querySelector("#btn-settings")?.addEventListener("click", () => this.onOpenSettings());
   }
 }

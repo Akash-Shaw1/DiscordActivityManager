@@ -134,10 +134,11 @@ fn run_manager_loop(
                            act: &Option<Activity>,
                            data_arc: &Arc<Mutex<AppData>>,
                            app: &AppHandle| {
-        let t_id = data_arc.lock().unwrap().active_template_id.clone();
+        let is_conn = matches!(state, ConnectionState::Connected { .. });
+        let t_id = if is_conn { data_arc.lock().unwrap().active_template_id.clone() } else { None };
         let payload = StatusPayload {
             connection_state: state.clone(),
-            active_activity: act.clone(),
+            active_activity: if is_conn { act.clone() } else { None },
             active_template_id: t_id,
         };
         let _ = app.emit("discord-state-changed", payload);
@@ -307,10 +308,11 @@ fn run_manager_loop(
                 broadcast_state(&state, &active_activity, &data, &app_handle);
             }
             Ok(ManagerMsg::GetStatus(reply_tx)) => {
+                let is_conn = matches!(state, ConnectionState::Connected { .. });
                 let payload = StatusPayload {
                     connection_state: state.clone(),
-                    active_activity: active_activity.clone(),
-                    active_template_id: data.lock().unwrap().active_template_id.clone(),
+                    active_activity: if is_conn { active_activity.clone() } else { None },
+                    active_template_id: if is_conn { data.lock().unwrap().active_template_id.clone() } else { None },
                 };
                 let _ = reply_tx.send(payload);
             }

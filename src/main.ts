@@ -34,7 +34,11 @@ class App {
     this.modalContainer = root.querySelector("#modal-container") as HTMLElement;
 
     // Create Components
-    this.statusBarComponent = new StatusBar(statusBarContainer, () => this.openSettings());
+    this.statusBarComponent = new StatusBar(
+      statusBarContainer,
+      () => this.openSettings(),
+      () => this.onClearActivity()
+    );
 
     this.templateListComponent = new TemplateList(
       templateListContainer,
@@ -111,9 +115,13 @@ class App {
     this.statusBarComponent.render(this.currentStatus);
 
     if (this.appData) {
+      const activeId = this.currentStatus.connection_state.type === "connected"
+        ? this.currentStatus.active_template_id
+        : undefined;
+
       this.templateListComponent.render(
         this.appData.templates,
-        this.currentStatus.active_template_id,
+        activeId,
         this.selectedTemplate?.id
       );
     }
@@ -135,6 +143,17 @@ class App {
     }
   }
 
+  private async onClearActivity() {
+    this.currentStatus.active_template_id = undefined;
+    if (this.appData) this.appData.active_template_id = undefined;
+    this.render();
+    try {
+      await api.clearActivity();
+    } catch (e) {
+      console.error("Failed clearing activity:", e);
+    }
+  }
+
   private async onSaveTemplate(template: Template) {
     try {
       this.appData = await api.saveTemplate(template);
@@ -147,6 +166,9 @@ class App {
 
   private async onDeleteTemplate(id: string) {
     try {
+      if (this.currentStatus.active_template_id === id) {
+        this.currentStatus.active_template_id = undefined;
+      }
       this.appData = await api.deleteTemplate(id);
       if (this.appData.templates.length > 0) {
         this.selectedTemplate = this.appData.templates[0];
