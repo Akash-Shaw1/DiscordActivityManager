@@ -50,10 +50,10 @@ export interface AppData {
 }
 
 export type ConnectionState =
-  | { type: "Disconnected" }
-  | { type: "Connecting" }
-  | { type: "Connected"; pipe_index: number; client_id: string }
-  | { type: "Error"; message: string };
+  | { type: "disconnected" }
+  | { type: "connecting" }
+  | { type: "connected"; pipe_index: number; client_id: string }
+  | { type: "error"; message: string };
 
 export interface StatusPayload {
   connection_state: ConnectionState;

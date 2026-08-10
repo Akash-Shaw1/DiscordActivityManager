@@ -6,7 +6,7 @@ import { SettingsModal } from "./screens/settingsModal";
 
 class App {
   private appData: AppData | null = null;
-  private currentStatus: StatusPayload = { connection_state: { type: "Disconnected" } };
+  private currentStatus: StatusPayload = { connection_state: { type: "disconnected" } };
   private selectedTemplate: Template | null = null;
 
   private statusBarComponent!: StatusBar;
@@ -63,7 +63,28 @@ class App {
       (template) => this.onApplyTemplate(template)
     );
 
-    // Load initial App Data
+    // 1. Subscribe to real-time Discord connection events FIRST (before any data loads)
+    try {
+      await api.listenStateChange((payload) => {
+        console.log("[Main] Received discord-state-changed event:", JSON.stringify(payload));
+        this.currentStatus = payload;
+        this.render();
+      });
+    } catch (e) {
+      console.warn("Real-time listener setup error:", e);
+    }
+
+    // 2. Fetch initial connection status immediately
+    try {
+      const initialStatus = await api.getConnectionState();
+      console.log("[Main] Initial connection state:", JSON.stringify(initialStatus));
+      this.currentStatus = initialStatus;
+      this.render();
+    } catch (e) {
+      console.warn("Failed fetching initial status:", e);
+    }
+
+    // 3. Load initial App Data
     try {
       this.appData = await api.getAppData();
       if (this.appData.templates.length > 0) {
@@ -75,21 +96,15 @@ class App {
       console.error("Failed loading app data:", e);
     }
 
-    // Subscribe to real-time Discord connection events
-    try {
-      await api.listenStateChange((payload) => {
-        console.log("[Main] Received discord-state-changed event:", payload);
-        this.currentStatus = payload;
+    // 4. Delayed re-fetch to catch race condition where Rust connects after initial fetch
+    setTimeout(async () => {
+      try {
+        const status = await api.getConnectionState();
+        console.log("[Main] Delayed status re-fetch:", JSON.stringify(status));
+        this.currentStatus = status;
         this.render();
-      });
-      // Fetch initial connection status
-      const initialStatus = await api.getConnectionState();
-      console.log("[Main] Initial connection state:", initialStatus);
-      this.currentStatus = initialStatus;
-      this.render();
-    } catch (e) {
-      console.warn("Real-time listener setup error:", e);
-    }
+      } catch (_) { /* ignore */ }
+    }, 2000);
   }
 
   private render() {
