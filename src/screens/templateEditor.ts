@@ -1,223 +1,128 @@
 import { Template } from "../api";
 
+const BOLT_SVG = `<svg width="20" height="20" viewBox="0 0 256 256"><path d="M148 36 L64 148 L112 148 L98 220 L192 106 L142 106 Z" fill="#4c8cff"/></svg>`;
+
 export class TemplateEditor {
   private container: HTMLElement;
   private currentTemplate: Template;
   private activeTab: "general" | "art" | "buttons" = "general";
-  private onSave: (template: Template) => void;
-  private onApply: (template: Template) => void;
+  private onSave: (t: Template) => void;
+  private onApply: (t: Template) => void;
 
-  constructor(container: HTMLElement, template: Template, onSave: (template: Template) => void, onApply: (template: Template) => void) {
+  constructor(container: HTMLElement, template: Template, onSave: (t: Template) => void, onApply: (t: Template) => void) {
     this.container = container;
-    this.currentTemplate = JSON.parse(JSON.stringify(template));
+    this.currentTemplate = structuredClone(template);
     this.onSave = onSave;
     this.onApply = onApply;
   }
 
   public setTemplate(template: Template) {
-    this.currentTemplate = JSON.parse(JSON.stringify(template));
+    this.currentTemplate = structuredClone(template);
     this.render();
   }
 
   public render() {
     const act = this.currentTemplate.activity;
     const assets = act.assets || {};
-    const buttons = act.buttons || [];
-    const btn1 = buttons[0] || { label: "", url: "" };
-    const btn2 = buttons[1] || { label: "", url: "" };
+    const btns = act.buttons || [];
+    const b1 = btns[0] || { label: "", url: "" };
+    const b2 = btns[1] || { label: "", url: "" };
 
     this.container.innerHTML = `
-      <div class="editor-workspace">
-        <!-- Form Left Column -->
-        <div class="editor-form-panel">
-          <!-- Segmented Tab Navigation -->
-          <div class="editor-tabs-nav">
-            <button class="tab-btn ${this.activeTab === 'general' ? 'active' : ''}" data-tab="general">
-              📝 General Details
-            </button>
-            <button class="tab-btn ${this.activeTab === 'art' ? 'active' : ''}" data-tab="art">
-              🖼️ Art & Media
-            </button>
-            <button class="tab-btn ${this.activeTab === 'buttons' ? 'active' : ''}" data-tab="buttons">
-              🔗 Action Buttons
-            </button>
-          </div>
+      <div class="main-col">
+        <!-- Tabs -->
+        <div class="tabs">
+          <button class="tab${this.activeTab === 'general' ? ' active' : ''}" data-tab="general">📄 General Details</button>
+          <button class="tab${this.activeTab === 'art' ? ' active' : ''}" data-tab="art">🖼 Art & Media</button>
+          <button class="tab${this.activeTab === 'buttons' ? ' active' : ''}" data-tab="buttons">🔗 Action Buttons</button>
+        </div>
 
-          <!-- Form Content Container -->
-          <div class="panel-card">
-            ${this.activeTab === 'general' ? `
-              <div class="panel-heading">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-                General Status Configuration
+        <!-- Form card -->
+        <div class="card">
+          ${this.activeTab === 'general' ? `
+            <div class="card-head">✏️ General status configuration</div>
+            <div class="field-row"><div class="field"><label>Preset name</label><input type="text" id="inp-preset-name" value="${ea(this.currentTemplate.name)}"></div></div>
+            <div class="field-row">
+              <div class="field"><label>Application / game title</label><input type="text" id="inp-act-name" value="${ea(act.name)}"></div>
+              <div class="field"><label>Activity type</label>
+                <select id="inp-act-type">
+                  <option value="0"${act.type===0?' selected':''}>Playing a game</option>
+                  <option value="2"${act.type===2?' selected':''}>Listening to music</option>
+                  <option value="3"${act.type===3?' selected':''}>Watching stream</option>
+                  <option value="5"${act.type===5?' selected':''}>Competing in tournament</option>
+                </select>
               </div>
-
-              <div class="form-grid">
-                <div class="form-group full-width">
-                  <label>Preset Name</label>
-                  <input type="text" id="inp-preset-name" value="${escapeAttr(this.currentTemplate.name)}" placeholder="e.g. Coding Session">
-                </div>
-
-                <div class="form-group">
-                  <label>Application / Game Title</label>
-                  <input type="text" id="inp-act-name" value="${escapeAttr(act.name)}" placeholder="e.g. Visual Studio Code">
-                </div>
-
-                <div class="form-group">
-                  <label>Activity Type</label>
-                  <select id="inp-act-type">
-                    <option value="0" ${act.type === 0 ? "selected" : ""}>Playing a game</option>
-                    <option value="2" ${act.type === 2 ? "selected" : ""}>Listening to music</option>
-                    <option value="3" ${act.type === 3 ? "selected" : ""}>Watching stream</option>
-                    <option value="5" ${act.type === 5 ? "selected" : ""}>Competing in tournament</option>
-                  </select>
-                </div>
-
-                <div class="form-group full-width">
-                  <label>Details (Line 1)</label>
-                  <input type="text" id="inp-act-details" value="${escapeAttr(act.details || "")}" placeholder="e.g. Working on Rust IPC protocol">
-                </div>
-
-                <div class="form-group full-width">
-                  <label>State (Line 2)</label>
-                  <input type="text" id="inp-act-state" value="${escapeAttr(act.state || "")}" placeholder="e.g. Workspace: discord-tracker">
-                </div>
-
-                <div class="form-group full-width" style="flex-direction: row; align-items: center; gap: 10px; margin-top: 4px;">
-                  <input type="checkbox" id="chk-show-timer" ${act.timestamps?.start ? "checked" : ""} style="width: 16px; height: 16px; cursor: pointer;">
-                  <label for="chk-show-timer" style="cursor: pointer; text-transform: none; font-size: 13px; font-weight: 500;">Show Live Counting Elapsed Timer</label>
-                </div>
-              </div>
-            ` : ''}
-
-            ${this.activeTab === 'art' ? `
-              <div class="panel-heading">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
-                  <circle cx="9" cy="9" r="2"/>
-                  <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
-                </svg>
-                Art Assets & Tooltips
-              </div>
-
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>Large Image Asset Key</label>
-                  <input type="text" id="inp-large-img" value="${escapeAttr(assets.large_image || "")}" placeholder="Uploaded asset key in Developer Portal">
-                </div>
-                <div class="form-group">
-                  <label>Large Image Hover Text</label>
-                  <input type="text" id="inp-large-txt" value="${escapeAttr(assets.large_text || "")}" placeholder="Hover tooltip text">
-                </div>
-                <div class="form-group">
-                  <label>Small Image Badge Key</label>
-                  <input type="text" id="inp-small-img" value="${escapeAttr(assets.small_image || "")}" placeholder="Uploaded asset key">
-                </div>
-                <div class="form-group">
-                  <label>Small Image Hover Text</label>
-                  <input type="text" id="inp-small-txt" value="${escapeAttr(assets.small_text || "")}" placeholder="Hover tooltip text">
-                </div>
-              </div>
-            ` : ''}
-
-            ${this.activeTab === 'buttons' ? `
-              <div class="panel-heading">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                </svg>
-                Custom Action Buttons (Max 2)
-              </div>
-
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>Button 1 Label</label>
-                  <input type="text" id="inp-btn1-label" value="${escapeAttr(btn1.label)}" placeholder="e.g. View GitHub Repo">
-                </div>
-                <div class="form-group">
-                  <label>Button 1 URL</label>
-                  <input type="text" id="inp-btn1-url" value="${escapeAttr(btn1.url)}" placeholder="https://github.com/...">
-                </div>
-
-                <div class="form-group">
-                  <label>Button 2 Label</label>
-                  <input type="text" id="inp-btn2-label" value="${escapeAttr(btn2.label)}" placeholder="e.g. Visit Website">
-                </div>
-                <div class="form-group">
-                  <label>Button 2 URL</label>
-                  <input type="text" id="inp-btn2-url" value="${escapeAttr(btn2.url)}" placeholder="https://example.com">
-                </div>
-              </div>
-            ` : ''}
-
-            <!-- Action Footer -->
-            <div class="action-footer-bar">
-              <button id="btn-save-preset" class="btn btn-secondary">
-                💾 Save Preset
-              </button>
-              <button id="btn-apply-preset" class="btn btn-success">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-                Apply Status Now
-              </button>
             </div>
+            <div class="field-row"><div class="field"><label>Details (line 1)</label><input type="text" id="inp-act-details" value="${ea(act.details||"")}"></div></div>
+            <div class="field-row"><div class="field"><label>State (line 2)</label><input type="text" id="inp-act-state" value="${ea(act.state||"")}"></div></div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="chk-timer"${act.timestamps?.start?' checked':''}>
+              <label for="chk-timer" style="cursor:pointer;text-transform:none;font-weight:500;font-size:13px;">Show live counting elapsed timer</label>
+            </div>
+          ` : ''}
+
+          ${this.activeTab === 'art' ? `
+            <div class="card-head">🖼 Art assets & tooltips</div>
+            <div class="field-row">
+              <div class="field"><label>Large image key</label><input type="text" id="inp-large-img" value="${ea(assets.large_image||"")}"></div>
+              <div class="field"><label>Large image tooltip</label><input type="text" id="inp-large-txt" value="${ea(assets.large_text||"")}"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Small image key</label><input type="text" id="inp-small-img" value="${ea(assets.small_image||"")}"></div>
+              <div class="field"><label>Small image tooltip</label><input type="text" id="inp-small-txt" value="${ea(assets.small_text||"")}"></div>
+            </div>
+          ` : ''}
+
+          ${this.activeTab === 'buttons' ? `
+            <div class="card-head">🔗 Custom action buttons (max 2)</div>
+            <div class="field-row">
+              <div class="field"><label>Button 1 label</label><input type="text" id="inp-btn1-label" value="${ea(b1.label)}"></div>
+              <div class="field"><label>Button 1 URL</label><input type="text" id="inp-btn1-url" value="${ea(b1.url)}"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Button 2 label</label><input type="text" id="inp-btn2-label" value="${ea(b2.label)}"></div>
+              <div class="field"><label>Button 2 URL</label><input type="text" id="inp-btn2-url" value="${ea(b2.url)}"></div>
+            </div>
+          ` : ''}
+
+          <div class="card-footer">
+            <button id="btn-save" class="btn btn-secondary">💾 Save Preset</button>
+            <button id="btn-apply" class="btn btn-success">✓ Apply Status Now</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div class="right-col">
+        <div class="card rpc-card">
+          <div class="rpc-icon">${BOLT_SVG}</div>
+          <div>
+            <div class="rpc-name">Native Discord RPC</div>
+            <div class="rpc-desc">Real-time presence engine powered by a Rust named-pipe transport.</div>
           </div>
         </div>
 
-        <!-- Live Discord Card Preview Right Column -->
-        <div class="preview-panel">
-          <div class="wumpus-banner-box">
-            <img src="/src/assets/wumpus.png" class="wumpus-img" alt="Wumpus">
+        <span class="eyebrow">Live profile preview</span>
+        <div class="preview-card">
+          <div class="profile-row">
+            <div class="avatar">U<span class="status-dot"></span></div>
             <div>
-              <div style="font-size: 13px; font-weight: 700; color: white;">Native Discord RPC</div>
-              <div style="font-size: 11px; color: var(--discord-text-muted);">Real-time presence engine powered by Rust named-pipe transport.</div>
+              <div class="profile-name">You</div>
+              <div class="handle">discord_user</div>
             </div>
           </div>
-
-          <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--discord-text-muted); letter-spacing: 0.5px;">
-            Live Profile Preview
-          </div>
-
-          <div class="discord-profile-card">
-            <div class="discord-profile-header">
-              <div class="avatar-container">
-                <div class="avatar-img">U</div>
-                <div class="avatar-status-dot"></div>
-              </div>
-              <div class="profile-names">
-                <span class="profile-display-name">You</span>
-                <span class="profile-username">discord_user</span>
-              </div>
+          <div class="divider"></div>
+          <div class="activity-eyebrow" id="prev-type">${typeLabel(act.type)}</div>
+          <div class="activity">
+            <div class="activity-art">
+              ${BOLT_SVG}
+              <span class="badge"></span>
             </div>
-
-            <div class="discord-activity-section">
-              <div class="activity-type-label" id="prev-type-label">
-                ${getActivityTypeLabel(act.type)}
-              </div>
-              
-              <div class="activity-body">
-                <div class="activity-assets">
-                  <div class="large-image-box" id="prev-large-box">
-                    ${assets.large_image ? '🖼️' : '🎮'}
-                  </div>
-                  ${assets.small_image ? `<div class="small-image-badge">⚡</div>` : ''}
-                </div>
-
-                <div class="activity-text-details">
-                  <div class="activity-title" id="prev-act-title">${escapeHtml(act.name || "Application Name")}</div>
-                  <div class="activity-line" id="prev-act-details">${escapeHtml(act.details || "Details line")}</div>
-                  <div class="activity-line" id="prev-act-state" style="color: var(--discord-text-muted);">${escapeHtml(act.state || "State line")}</div>
-                  <div class="activity-line" id="prev-act-timer" style="color: var(--discord-text-muted); font-size: 11px; margin-top: 2px;">00:00 elapsed</div>
-                </div>
-              </div>
-
-              <div class="activity-buttons-stack" id="prev-buttons-stack">
-                ${btn1.label ? `<div class="discord-preview-btn">${escapeHtml(btn1.label)}</div>` : ''}
-                ${btn2.label ? `<div class="discord-preview-btn">${escapeHtml(btn2.label)}</div>` : ''}
-              </div>
+            <div>
+              <div class="activity-name" id="prev-title">${eh(act.name||"App Name")}</div>
+              <div class="activity-line" id="prev-details">${eh(act.details||"")}</div>
+              <div class="activity-line muted" id="prev-state">${eh(act.state||"")}</div>
+              <div class="activity-timer" id="prev-timer" style="display:${act.timestamps?.start?'block':'none'}">00:00 elapsed</div>
             </div>
           </div>
         </div>
@@ -229,218 +134,113 @@ export class TemplateEditor {
   }
 
   public collectFormData(): Template {
-    const getVal = (id: string) => (this.container.querySelector(`#${id}`) as HTMLInputElement | HTMLSelectElement)?.value?.trim() || "";
+    const v = (id: string) => (this.container.querySelector(`#${id}`) as HTMLInputElement|HTMLSelectElement)?.value?.trim() || "";
+    const name = v("inp-preset-name") || this.currentTemplate.name;
+    const actName = v("inp-act-name") || this.currentTemplate.activity.name;
+    const actType = v("inp-act-type") !== "" ? parseInt(v("inp-act-type"),10) : this.currentTemplate.activity.type;
+    const details = v("inp-act-details") || this.currentTemplate.activity.details;
+    const state = v("inp-act-state") || this.currentTemplate.activity.state;
 
-    // Read current input or fallback to existing currentTemplate field
-    const name = getVal("inp-preset-name") || this.currentTemplate.name || "Custom Status";
-    const actName = getVal("inp-act-name") || this.currentTemplate.activity.name || "Visual Studio Code";
-    const actType = getVal("inp-act-type") !== "" ? parseInt(getVal("inp-act-type"), 10) : this.currentTemplate.activity.type;
-    const details = getVal("inp-act-details") || this.currentTemplate.activity.details;
-    const state = getVal("inp-act-state") || this.currentTemplate.activity.state;
+    const li = v("inp-large-img") || this.currentTemplate.activity.assets?.large_image;
+    const lt = v("inp-large-txt") || this.currentTemplate.activity.assets?.large_text;
+    const si = v("inp-small-img") || this.currentTemplate.activity.assets?.small_image;
+    const st = v("inp-small-txt") || this.currentTemplate.activity.assets?.small_text;
+    const assets = (li||lt||si||st) ? {large_image:li,large_text:lt,small_image:si,small_text:st} : undefined;
 
-    const largeImg = getVal("inp-large-img") || this.currentTemplate.activity.assets?.large_image;
-    const largeTxt = getVal("inp-large-txt") || this.currentTemplate.activity.assets?.large_text;
-    const smallImg = getVal("inp-small-img") || this.currentTemplate.activity.assets?.small_image;
-    const smallTxt = getVal("inp-small-txt") || this.currentTemplate.activity.assets?.small_text;
-
-    let assets = undefined;
-    if (largeImg || largeTxt || smallImg || smallTxt) {
-      assets = {
-        large_image: largeImg,
-        large_text: largeTxt,
-        small_image: smallImg,
-        small_text: smallTxt,
-      };
-    }
-
-    const l1 = getVal("inp-btn1-label") || this.currentTemplate.activity.buttons?.[0]?.label;
-    const u1 = getVal("inp-btn1-url") || this.currentTemplate.activity.buttons?.[0]?.url;
-    const l2 = getVal("inp-btn2-label") || this.currentTemplate.activity.buttons?.[1]?.label;
-    const u2 = getVal("inp-btn2-url") || this.currentTemplate.activity.buttons?.[1]?.url;
-
+    const l1 = v("inp-btn1-label") || this.currentTemplate.activity.buttons?.[0]?.label;
+    const u1 = v("inp-btn1-url") || this.currentTemplate.activity.buttons?.[0]?.url;
+    const l2 = v("inp-btn2-label") || this.currentTemplate.activity.buttons?.[1]?.label;
+    const u2 = v("inp-btn2-url") || this.currentTemplate.activity.buttons?.[1]?.url;
     const btns = [];
-    if (l1 && u1) btns.push({ label: l1, url: u1 });
-    if (l2 && u2) btns.push({ label: l2, url: u2 });
+    if (l1&&u1) btns.push({label:l1,url:u1});
+    if (l2&&u2) btns.push({label:l2,url:u2});
 
-    const timerChk = this.container.querySelector("#chk-show-timer") as HTMLInputElement;
-    const showTimer = timerChk ? timerChk.checked : !!this.currentTemplate.activity.timestamps?.start;
-    // Always refresh timestamp start to current seconds when saving/applying with timer
-    const timestamps = showTimer ? { start: Math.floor(Date.now() / 1000) } : undefined;
+    const chk = this.container.querySelector("#chk-timer") as HTMLInputElement;
+    const showTimer = chk ? chk.checked : !!this.currentTemplate.activity.timestamps?.start;
+    const timestamps = showTimer ? {start:Math.floor(Date.now()/1000)} : undefined;
 
-    this.currentTemplate = {
-      id: this.currentTemplate.id,
-      name,
-      activity: {
-        name: actName,
-        details,
-        state,
-        type: actType,
-        timestamps,
-        assets,
-        buttons: btns.length > 0 ? btns : undefined,
-      },
-    };
-
+    this.currentTemplate = {id:this.currentTemplate.id,name,activity:{name:actName,details,state,type:actType,timestamps,assets,buttons:btns.length>0?btns:undefined}};
     return this.currentTemplate;
   }
 
   private attachEvents() {
-    this.container.querySelectorAll(".tab-btn").forEach(btn => {
+    this.container.querySelectorAll(".tab").forEach(btn => {
       btn.addEventListener("click", () => {
         this.collectFormData();
-        const tab = (btn as HTMLElement).getAttribute("data-tab") as "general" | "art" | "buttons";
-        if (tab) {
-          this.activeTab = tab;
-          this.render();
-        }
+        const tab = (btn as HTMLElement).getAttribute("data-tab") as "general"|"art"|"buttons";
+        if (tab) { this.activeTab = tab; this.render(); }
       });
     });
 
-    const bindInput = (id: string, callback: (val: string) => void) => {
-      const el = this.container.querySelector(`#${id}`) as HTMLInputElement | HTMLSelectElement;
-      if (el) {
-        el.addEventListener("input", (e) => {
-          callback((e.target as HTMLInputElement).value);
-          this.updatePreview();
-        });
-      }
+    const bind = (id: string, cb: (v:string)=>void) => {
+      const el = this.container.querySelector(`#${id}`) as HTMLInputElement|HTMLSelectElement;
+      if (el) el.addEventListener("input", e => { cb((e.target as HTMLInputElement).value); this.updatePreview(); });
     };
 
-    bindInput("inp-preset-name", val => { this.currentTemplate.name = val; });
-    bindInput("inp-act-name", val => { this.currentTemplate.activity.name = val; });
-    bindInput("inp-act-type", val => { this.currentTemplate.activity.type = parseInt(val, 10); });
-    bindInput("inp-act-details", val => { this.currentTemplate.activity.details = val || undefined; });
-    bindInput("inp-act-state", val => { this.currentTemplate.activity.state = val || undefined; });
+    bind("inp-preset-name", v => { this.currentTemplate.name = v; });
+    bind("inp-act-name", v => { this.currentTemplate.activity.name = v; });
+    bind("inp-act-type", v => { this.currentTemplate.activity.type = parseInt(v,10); });
+    bind("inp-act-details", v => { this.currentTemplate.activity.details = v||undefined; });
+    bind("inp-act-state", v => { this.currentTemplate.activity.state = v||undefined; });
+    bind("inp-large-img", v => { if(!this.currentTemplate.activity.assets)this.currentTemplate.activity.assets={}; this.currentTemplate.activity.assets.large_image=v||undefined; });
+    bind("inp-large-txt", v => { if(!this.currentTemplate.activity.assets)this.currentTemplate.activity.assets={}; this.currentTemplate.activity.assets.large_text=v||undefined; });
+    bind("inp-small-img", v => { if(!this.currentTemplate.activity.assets)this.currentTemplate.activity.assets={}; this.currentTemplate.activity.assets.small_image=v||undefined; });
+    bind("inp-small-txt", v => { if(!this.currentTemplate.activity.assets)this.currentTemplate.activity.assets={}; this.currentTemplate.activity.assets.small_text=v||undefined; });
 
-    bindInput("inp-large-img", val => {
-      if (!this.currentTemplate.activity.assets) this.currentTemplate.activity.assets = {};
-      this.currentTemplate.activity.assets.large_image = val || undefined;
-    });
-    bindInput("inp-large-txt", val => {
-      if (!this.currentTemplate.activity.assets) this.currentTemplate.activity.assets = {};
-      this.currentTemplate.activity.assets.large_text = val || undefined;
-    });
-    bindInput("inp-small-img", val => {
-      if (!this.currentTemplate.activity.assets) this.currentTemplate.activity.assets = {};
-      this.currentTemplate.activity.assets.small_image = val || undefined;
-    });
-    bindInput("inp-small-txt", val => {
-      if (!this.currentTemplate.activity.assets) this.currentTemplate.activity.assets = {};
-      this.currentTemplate.activity.assets.small_text = val || undefined;
-    });
-
-    const updateButtons = () => {
-      const l1 = (this.container.querySelector("#inp-btn1-label") as HTMLInputElement)?.value;
-      const u1 = (this.container.querySelector("#inp-btn1-url") as HTMLInputElement)?.value;
-      const l2 = (this.container.querySelector("#inp-btn2-label") as HTMLInputElement)?.value;
-      const u2 = (this.container.querySelector("#inp-btn2-url") as HTMLInputElement)?.value;
-
+    const updateBtns = () => {
+      const g = (id:string) => (this.container.querySelector(`#${id}`) as HTMLInputElement)?.value||"";
       const btns = [];
-      if (l1 && u1) btns.push({ label: l1, url: u1 });
-      if (l2 && u2) btns.push({ label: l2, url: u2 });
-      this.currentTemplate.activity.buttons = btns.length > 0 ? btns : undefined;
+      if(g("inp-btn1-label")&&g("inp-btn1-url")) btns.push({label:g("inp-btn1-label"),url:g("inp-btn1-url")});
+      if(g("inp-btn2-label")&&g("inp-btn2-url")) btns.push({label:g("inp-btn2-label"),url:g("inp-btn2-url")});
+      this.currentTemplate.activity.buttons = btns.length>0?btns:undefined;
       this.updatePreview();
     };
+    ["inp-btn1-label","inp-btn1-url","inp-btn2-label","inp-btn2-url"].forEach(id => this.container.querySelector(`#${id}`)?.addEventListener("input",updateBtns));
 
-    ["inp-btn1-label", "inp-btn1-url", "inp-btn2-label", "inp-btn2-url"].forEach(id => {
-      this.container.querySelector(`#${id}`)?.addEventListener("input", updateButtons);
+    const chk = this.container.querySelector("#chk-timer") as HTMLInputElement;
+    if(chk) chk.addEventListener("change",()=>{
+      this.currentTemplate.activity.timestamps = chk.checked ? {start:Math.floor(Date.now()/1000)} : undefined;
+      this.updatePreview();
     });
 
-    const timerChk = this.container.querySelector("#chk-show-timer") as HTMLInputElement;
-    if (timerChk) {
-      timerChk.addEventListener("change", () => {
-        if (timerChk.checked) {
-          this.currentTemplate.activity.timestamps = { start: Math.floor(Date.now() / 1000) };
-        } else {
-          this.currentTemplate.activity.timestamps = undefined;
-        }
-        this.updatePreview();
-      });
-    }
-
-    this.container.querySelector("#btn-save-preset")?.addEventListener("click", () => {
-      const t = this.collectFormData();
-      this.onSave(t);
-      showToast("✨ Preset saved!");
+    this.container.querySelector("#btn-save")?.addEventListener("click",()=>{
+      this.onSave(this.collectFormData()); toast("✨ Preset saved!");
     });
-
-    this.container.querySelector("#btn-apply-preset")?.addEventListener("click", () => {
-      const t = this.collectFormData();
-      this.onSave(t);
-      this.onApply(t);
-      showToast("🚀 Status applied to Discord!");
+    this.container.querySelector("#btn-apply")?.addEventListener("click",()=>{
+      const t = this.collectFormData(); this.onSave(t); this.onApply(t); toast("🚀 Status applied to Discord!");
     });
   }
 
   private updatePreview() {
-    const act = this.currentTemplate.activity;
-    const prevType = this.container.querySelector("#prev-type-label");
-    if (prevType) prevType.textContent = getActivityTypeLabel(act.type);
-
-    const prevTitle = this.container.querySelector("#prev-act-title");
-    if (prevTitle) prevTitle.textContent = act.name || "Application Name";
-
-    const prevDetails = this.container.querySelector("#prev-act-details");
-    if (prevDetails) prevDetails.textContent = act.details || "";
-
-    const prevState = this.container.querySelector("#prev-act-state");
-    if (prevState) prevState.textContent = act.state || "";
-
-    const prevTimer = this.container.querySelector("#prev-act-timer");
-    if (prevTimer) {
-      if (act.timestamps?.start) {
-        let startSec = act.timestamps.start;
-        if (startSec > 20000000000) startSec = Math.floor(startSec / 1000);
-        const elapsedSec = Math.max(0, Math.floor(Date.now() / 1000) - startSec);
-        const mins = Math.floor(elapsedSec / 60).toString().padStart(2, '0');
-        const secs = (elapsedSec % 60).toString().padStart(2, '0');
-        prevTimer.textContent = `${mins}:${secs} elapsed`;
-        (prevTimer as HTMLElement).style.display = "block";
-      } else {
-        (prevTimer as HTMLElement).style.display = "none";
-      }
-    }
-
-    const prevBtns = this.container.querySelector("#prev-buttons-stack");
-    if (prevBtns) {
-      const btns = act.buttons || [];
-      prevBtns.innerHTML = btns.map(b => `<div class="discord-preview-btn">${escapeHtml(b.label)}</div>`).join('');
+    const a = this.currentTemplate.activity;
+    const el = (id:string) => this.container.querySelector(`#${id}`);
+    const e = el("prev-type"); if(e) e.textContent = typeLabel(a.type);
+    const t = el("prev-title"); if(t) t.textContent = a.name||"App Name";
+    const d = el("prev-details"); if(d) d.textContent = a.details||"";
+    const s = el("prev-state"); if(s) s.textContent = a.state||"";
+    const tm = el("prev-timer") as HTMLElement;
+    if(tm){
+      if(a.timestamps?.start){
+        let sec = a.timestamps.start;
+        if(sec>20000000000) sec = Math.floor(sec/1000);
+        const elapsed = Math.max(0,Math.floor(Date.now()/1000)-sec);
+        tm.textContent = `${String(Math.floor(elapsed/60)).padStart(2,'0')}:${String(elapsed%60).padStart(2,'0')} elapsed`;
+        tm.style.display = "block";
+      } else { tm.style.display = "none"; }
     }
   }
 }
 
-function showToast(message: string) {
-  let container = document.querySelector(".toast-container");
-  if (!container) {
-    container = document.createElement("div");
-    container.className = "toast-container";
-    document.body.appendChild(container);
-  }
-
-  const toast = document.createElement("div");
-  toast.className = "toast";
-  toast.innerHTML = `<span>${message}</span>`;
-  container.appendChild(toast);
-
-  setTimeout(() => {
-    toast.remove();
-  }, 3000);
+function toast(msg: string) {
+  let c = document.querySelector(".toast-container");
+  if(!c){c=document.createElement("div");c.className="toast-container";document.body.appendChild(c);}
+  const t = document.createElement("div"); t.className="toast"; t.textContent=msg; c.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
 }
 
-function getActivityTypeLabel(type: number): string {
-  switch (type) {
-    case 0: return "Playing a game";
-    case 2: return "Listening to";
-    case 3: return "Watching";
-    case 5: return "Competing in";
-    default: return "Playing a game";
-  }
+function typeLabel(type: number): string {
+  switch(type){case 0:return"Playing a game";case 2:return"Listening to";case 3:return"Watching";case 5:return"Competing in";default:return"Playing a game";}
 }
 
-function escapeHtml(str: string): string {
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
-function escapeAttr(str: string): string {
-  return str.replace(/"/g, "&quot;");
-}
+function eh(s: string): string { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function ea(s: string): string { return s.replace(/"/g,"&quot;"); }

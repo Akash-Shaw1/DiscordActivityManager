@@ -23,7 +23,7 @@ class App {
       <div id="status-bar-container"></div>
       <div class="main-layout">
         <div id="template-list-container"></div>
-        <div id="template-editor-container"></div>
+        <div id="template-editor-container" style="display:flex;flex:1;overflow:hidden;"></div>
       </div>
       <div id="modal-container"></div>
     `;

@@ -1,0 +1,331 @@
+<!-- DESIGN REFERENCE ONLY — static mockup, no app logic.
+     Agent: port these tokens/classes into the real app, don't ship this file as-is. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Discord Status Manager — UI reference</title>
+<style>
+  :root{
+    /* ---- Discord-dark tokens ---- */
+    --bg-primary:#313338;
+    --bg-secondary:#2b2d31;
+    --bg-tertiary:#1e1f22;
+    --bg-floating:#111214;
+    --bg-card:#2b2d31;
+    --bg-hover:#3a3c41;
+    --bg-active:#404249;
+    --bg-input:#1e1f22;
+    --border-subtle:#1e1f22;
+
+    --text-primary:#f2f3f5;
+    --text-secondary:#b5bac1;
+    --text-muted:#949ba4;
+
+    --brand:#4c8cff;
+    --brand-dim:rgba(76,140,255,.14);
+    --brand-grad-a:#6da5ff;
+    --brand-grad-b:#2f6fed;
+
+    --green:#23a55a;
+    --green-hover:#1a7d43;
+    --red:#da373c;
+    --red-hover:#a12828;
+    --yellow:#f0b232;
+
+    --radius-sm:3px;
+    --radius-md:8px;
+    --radius-lg:12px;
+    --radius-full:9999px;
+
+    --font-ui: -apple-system, "Segoe UI", "gg sans", "Noto Sans", Helvetica, Arial, sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg-tertiary);
+    font-family:var(--font-ui);
+    color:var(--text-primary);
+    display:flex;
+    justify-content:center;
+    padding:24px;
+  }
+  .app{
+    width:1180px;
+    border-radius:var(--radius-lg);
+    overflow:hidden;
+    box-shadow:0 8px 24px rgba(0,0,0,.4);
+    border:1px solid #000;
+  }
+
+  /* ---- Title bar ---- */
+  .titlebar{
+    height:40px;
+    background:var(--bg-tertiary);
+    display:flex;
+    align-items:center;
+    padding:0 12px;
+    gap:8px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--text-secondary);
+    -webkit-app-region:drag;
+  }
+  .titlebar .spacer{flex:1;}
+  .titlebar .win-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-sm);opacity:.7;}
+  .titlebar .win-btn:hover{background:var(--bg-hover);opacity:1;}
+
+  /* ---- Header row ---- */
+  .header{
+    background:var(--bg-primary);
+    display:flex;
+    align-items:center;
+    padding:14px 20px;
+    gap:16px;
+    border-bottom:1px solid var(--border-subtle);
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-icon{width:32px;height:32px;border-radius:8px;background:var(--bg-tertiary);display:flex;align-items:center;justify-content:center;}
+  .brand-text .title{font-size:15px;font-weight:700;line-height:1.2;}
+  .brand-text .subtitle{font-size:12px;color:var(--text-muted);}
+  .header .spacer{flex:1;}
+
+  .pill{
+    display:flex;align-items:center;gap:6px;
+    padding:6px 12px;border-radius:var(--radius-full);
+    font-size:13px;font-weight:600;
+  }
+  .pill.online{background:rgba(35,165,90,.14);color:var(--green);}
+  .pill.online .dot{width:8px;height:8px;border-radius:50%;background:var(--green);}
+
+  .btn{
+    border:none;border-radius:var(--radius-sm);
+    padding:8px 14px;font-size:13px;font-weight:600;
+    font-family:var(--font-ui);cursor:pointer;
+    display:flex;align-items:center;gap:6px;
+    transition:background-color .12s ease;
+  }
+  .btn-secondary{background:#4e5058;color:var(--text-primary);}
+  .btn-secondary:hover{background:#5c5e66;}
+  .btn-danger{background:var(--red);color:#fff;}
+  .btn-danger:hover{background:var(--red-hover);}
+  .btn-success{background:var(--green);color:#fff;}
+  .btn-success:hover{background:var(--green-hover);}
+  .btn-primary{background:var(--brand);color:#fff;}
+  .btn-primary:hover{background:var(--brand-grad-b);}
+  .btn-sm{padding:6px 10px;font-size:12px;}
+  .btn-block{flex:1;justify-content:center;}
+
+  /* ---- Layout ---- */
+  .body-row{display:flex;background:var(--bg-primary);min-height:640px;}
+
+  /* ---- Sidebar ---- */
+  .sidebar{width:280px;background:var(--bg-secondary);padding:16px;border-right:1px solid var(--border-subtle);}
+  .sidebar-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--text-muted);text-transform:uppercase;}
+  .search{
+    background:var(--bg-input);border-radius:var(--radius-md);
+    padding:8px 10px;font-size:13px;color:var(--text-muted);
+    margin-bottom:14px;
+  }
+  .preset-card{
+    background:var(--bg-active);
+    border-radius:var(--radius-md);
+    padding:12px;margin-bottom:10px;
+    border:1px solid transparent;
+    position:relative;
+  }
+  .preset-card.active{border-color:var(--brand);background:var(--brand-dim);}
+  .preset-card.active::before{
+    content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;
+    background:var(--brand);border-radius:0 3px 3px 0;
+  }
+  .preset-card .row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+  .preset-card .name{font-size:14px;font-weight:600;}
+  .badge-active{
+    background:var(--brand);color:#fff;font-size:10px;font-weight:700;
+    padding:2px 8px;border-radius:var(--radius-full);letter-spacing:.03em;
+  }
+  .preset-card .desc{font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:10px;}
+  .preset-card .actions{display:flex;gap:6px;}
+
+  /* ---- Main column ---- */
+  .main{flex:1;padding:20px;display:flex;flex-direction:column;gap:16px;}
+  .tabs{display:flex;gap:4px;}
+  .tab{
+    display:flex;align-items:center;gap:6px;padding:10px 16px;
+    border-radius:var(--radius-md) var(--radius-md) 0 0;
+    font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer;
+  }
+  .tab.active{background:var(--bg-card);color:var(--text-primary);}
+  .tab:hover:not(.active){background:var(--bg-hover);color:var(--text-secondary);}
+
+  .card{background:var(--bg-card);border-radius:var(--radius-lg);padding:20px;}
+  .card-head{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:18px;}
+
+  .field-row{display:flex;gap:16px;margin-bottom:16px;}
+  .field{flex:1;}
+  .field label{display:block;font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;}
+  .field input, .field select{
+    width:100%;background:var(--bg-input);border:1px solid #000;border-radius:var(--radius-sm);
+    color:var(--text-primary);font-size:14px;padding:10px 12px;font-family:var(--font-ui);
+  }
+  .field input:focus, .field select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-dim);}
+
+  .checkbox-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);margin:4px 0 20px;}
+  .checkbox-row .box{width:16px;height:16px;border-radius:var(--radius-sm);border:1px solid var(--text-muted);}
+
+  .card-footer{display:flex;justify-content:flex-end;gap:10px;}
+
+  /* ---- Right column ---- */
+  .right-col{width:300px;padding:20px;display:flex;flex-direction:column;gap:16px;background:var(--bg-primary);border-left:1px solid var(--border-subtle);}
+  .rpc-card{display:flex;gap:12px;align-items:flex-start;}
+  .rpc-icon{width:40px;height:40px;border-radius:var(--radius-md);background:var(--brand-dim);display:flex;align-items:center;justify-content:center;flex:none;}
+  .rpc-card .name{font-size:14px;font-weight:700;margin-bottom:4px;}
+  .rpc-card .desc{font-size:12px;color:var(--text-muted);line-height:1.4;}
+
+  .preview-card{background:var(--bg-secondary);border-radius:var(--radius-lg);padding:16px;}
+  .profile-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+  .avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--brand-grad-a),var(--brand-grad-b));display:flex;align-items:center;justify-content:center;font-weight:700;position:relative;}
+  .avatar .status-dot{position:absolute;right:-2px;bottom:-2px;width:14px;height:14px;border-radius:50%;background:var(--green);border:3px solid var(--bg-secondary);}
+  .profile-row .name{font-size:15px;font-weight:700;}
+  .profile-row .handle{font-size:12px;color:var(--text-muted);}
+  .divider{height:1px;background:var(--bg-tertiary);margin:12px 0;}
+
+  .activity-eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--brand);letter-spacing:.03em;margin-bottom:10px;}
+  .activity{display:flex;gap:10px;}
+  .activity-art{width:44px;height:44px;border-radius:var(--radius-md);background:var(--bg-tertiary);flex:none;position:relative;display:flex;align-items:center;justify-content:center;}
+  .activity-art .badge{position:absolute;right:-4px;bottom:-4px;width:18px;height:18px;border-radius:50%;background:var(--brand);border:3px solid var(--bg-secondary);}
+  .activity-name{font-size:13px;font-weight:700;margin-bottom:2px;}
+  .activity-line{font-size:12px;color:var(--text-secondary);}
+  .activity-line.muted{color:var(--text-muted);}
+  .activity-timer{font-size:11px;color:var(--text-muted);margin-top:4px;font-family:ui-monospace,monospace;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="titlebar">
+    <svg width="16" height="16" viewBox="0 0 256 256"><path d="M148 36 L64 148 L112 148 L98 220 L192 106 L142 106 Z" fill="#4c8cff"/></svg>
+    Discord Status Manager
+    <div class="spacer"></div>
+    <div class="win-btn">–</div><div class="win-btn">☐</div><div class="win-btn">✕</div>
+  </div>
+
+  <div class="header">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="20" height="20" viewBox="0 0 256 256"><path d="M148 36 L64 148 L112 148 L98 220 L192 106 L142 106 Z" fill="#4c8cff"/></svg>
+      </div>
+      <div class="brand-text">
+        <div class="title">Discord Status Manager</div>
+        <div class="subtitle">App ID: 383226320970055681</div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="pill online"><span class="dot"></span>Connected (Pipe #0)</div>
+    <button class="btn btn-secondary">⟲ Reconnect</button>
+    <button class="btn btn-danger">Clear Activity</button>
+    <button class="btn btn-secondary">⚙ Settings</button>
+  </div>
+
+  <div class="body-row">
+    <div class="sidebar">
+      <div class="sidebar-head">
+        <span class="eyebrow">Presets library</span>
+        <button class="btn btn-primary btn-sm">+ New</button>
+      </div>
+      <div class="search">🔍 Search presets…</div>
+
+      <div class="preset-card">
+        <div class="row"><span class="name">Coding in VS Code</span></div>
+        <div class="desc">Visual Studio Code — Developing Disco…</div>
+        <div class="actions">
+          <button class="btn btn-success btn-sm btn-block">Apply Status</button>
+          <button class="btn btn-secondary btn-sm">Edit</button>
+          <button class="btn btn-danger btn-sm">Delete</button>
+        </div>
+      </div>
+
+      <div class="preset-card active">
+        <div class="row"><span class="name">New Preset</span><span class="badge-active">ACTIVE</span></div>
+        <div class="desc">Visual Studio Code — Custom details line</div>
+        <div class="actions">
+          <button class="btn btn-success btn-sm btn-block">Apply Status</button>
+          <button class="btn btn-secondary btn-sm">Edit</button>
+          <button class="btn btn-danger btn-sm">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="tabs">
+        <div class="tab active">📄 General Details</div>
+        <div class="tab">🖼 Art &amp; Media</div>
+        <div class="tab">🔗 Action Buttons</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">✏️ General status configuration</div>
+
+        <div class="field-row">
+          <div class="field"><label>Preset name</label><input value="Coding in VS Code"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Application / game title</label><input value="Visual Studio Code"></div>
+          <div class="field"><label>Activity type</label><select><option>Playing a game</option></select></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Details (line 1)</label><input value="Developing Discord Status Manager"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>State (line 2)</label><input value="Workspace: Rust &amp; TypeScript"></div>
+        </div>
+
+        <div class="checkbox-row"><span class="box"></span>Show live counting elapsed timer</div>
+
+        <div class="card-footer">
+          <button class="btn btn-secondary">💾 Save Preset</button>
+          <button class="btn btn-success">✓ Apply Status Now</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <div class="card rpc-card">
+        <div class="rpc-icon"><svg width="20" height="20" viewBox="0 0 256 256"><path d="M148 36 L64 148 L112 148 L98 220 L192 106 L142 106 Z" fill="#4c8cff"/></svg></div>
+        <div>
+          <div class="name">Native Discord RPC</div>
+          <div class="desc">Real-time presence engine powered by a Rust named-pipe transport.</div>
+        </div>
+      </div>
+
+      <span class="eyebrow">Live profile preview</span>
+      <div class="preview-card">
+        <div class="profile-row">
+          <div class="avatar">U<span class="status-dot"></span></div>
+          <div>
+            <div class="name">You</div>
+            <div class="handle">discord_user</div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="activity-eyebrow">Playing a game</div>
+        <div class="activity">
+          <div class="activity-art">
+            <svg width="20" height="20" viewBox="0 0 256 256"><path d="M148 36 L64 148 L112 148 L98 220 L192 106 L142 106 Z" fill="#4c8cff"/></svg>
+            <span class="badge"></span>
+          </div>
+          <div>
+            <div class="activity-name">Visual Studio Code</div>
+            <div class="activity-line">Developing Discord Status Manager</div>
+            <div class="activity-line muted">Workspace: Rust &amp; TypeScript</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

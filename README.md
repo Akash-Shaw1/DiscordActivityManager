@@ -4,7 +4,7 @@ A lightweight, native Windows desktop application for setting and templating cus
 
 Built with **Tauri 2**, **Rust** (raw IPC named-pipe transport), and **Vanilla TypeScript**.
 
-![Discord Wumpus](/src/assets/wumpus.png)
+
 
 ---
 
@@ -86,6 +86,13 @@ npm run tauri build
 ```
 The standalone binary will be generated at:
 `src-tauri/target/release/discord-status-manager.exe`
+
+---
+
+## ⚡ Branding
+App icon and in-app mark are an original blue bolt design (`UI stuff/app-icon.svg`,
+`UI stuff/bolt-mono.svg`) — not Discord's logo. UI colors/type follow Discord's dark
+theme for a familiar feel, but no Discord-owned artwork is bundled or displayed.
 
 ---
 
