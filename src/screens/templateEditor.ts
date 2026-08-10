@@ -32,15 +32,15 @@ export class TemplateEditor {
       <div class="main-col">
         <!-- Tabs -->
         <div class="tabs">
-          <button class="tab${this.activeTab === 'general' ? ' active' : ''}" data-tab="general">📄 General Details</button>
-          <button class="tab${this.activeTab === 'art' ? ' active' : ''}" data-tab="art">🖼 Art & Media</button>
-          <button class="tab${this.activeTab === 'buttons' ? ' active' : ''}" data-tab="buttons">🔗 Action Buttons</button>
+          <button class="tab${this.activeTab === 'general' ? ' active' : ''}" data-tab="general">General Details</button>
+          <button class="tab${this.activeTab === 'art' ? ' active' : ''}" data-tab="art">Art & Media</button>
+          <button class="tab${this.activeTab === 'buttons' ? ' active' : ''}" data-tab="buttons">Action Buttons</button>
         </div>
 
         <!-- Form card -->
         <div class="card">
           ${this.activeTab === 'general' ? `
-            <div class="card-head">✏️ General status configuration</div>
+            <div class="card-head">General Status Configuration</div>
             <div class="field-row"><div class="field"><label>Preset name</label><input type="text" id="inp-preset-name" value="${ea(this.currentTemplate.name)}"></div></div>
             <div class="field-row">
               <div class="field"><label>Application / game title</label><input type="text" id="inp-act-name" value="${ea(act.name)}"></div>
@@ -62,7 +62,7 @@ export class TemplateEditor {
           ` : ''}
 
           ${this.activeTab === 'art' ? `
-            <div class="card-head">🖼 Art assets & tooltips</div>
+            <div class="card-head">Art Assets & Tooltips</div>
             <div class="field-row">
               <div class="field"><label>Large image key</label><input type="text" id="inp-large-img" value="${ea(assets.large_image||"")}"></div>
               <div class="field"><label>Large image tooltip</label><input type="text" id="inp-large-txt" value="${ea(assets.large_text||"")}"></div>
@@ -74,7 +74,7 @@ export class TemplateEditor {
           ` : ''}
 
           ${this.activeTab === 'buttons' ? `
-            <div class="card-head">🔗 Custom action buttons (max 2)</div>
+            <div class="card-head">Custom Action Buttons (max 2)</div>
             <div class="field-row">
               <div class="field"><label>Button 1 label</label><input type="text" id="inp-btn1-label" value="${ea(b1.label)}"></div>
               <div class="field"><label>Button 1 URL</label><input type="text" id="inp-btn1-url" value="${ea(b1.url)}"></div>
@@ -86,8 +86,8 @@ export class TemplateEditor {
           ` : ''}
 
           <div class="card-footer">
-            <button id="btn-save" class="btn btn-secondary">💾 Save Preset</button>
-            <button id="btn-apply" class="btn btn-success">✓ Apply Status Now</button>
+            <button id="btn-save" class="btn btn-secondary">Save Preset</button>
+            <button id="btn-apply" class="btn btn-success">Apply Status Now</button>
           </div>
         </div>
       </div>
@@ -204,10 +204,10 @@ export class TemplateEditor {
     });
 
     this.container.querySelector("#btn-save")?.addEventListener("click",()=>{
-      this.onSave(this.collectFormData()); toast("✨ Preset saved!");
+      this.onSave(this.collectFormData()); toast("Preset saved!");
     });
     this.container.querySelector("#btn-apply")?.addEventListener("click",()=>{
-      const t = this.collectFormData(); this.onSave(t); this.onApply(t); toast("🚀 Status applied to Discord!");
+      const t = this.collectFormData(); this.onSave(t); this.onApply(t); toast("Status applied to Discord!");
     });
   }
 

@@ -18,7 +18,7 @@ export class SettingsModal {
       <div class="modal-backdrop">
         <div class="modal-content">
           <div class="modal-header">
-            <div class="modal-title">⚙ App Settings</div>
+            <div class="modal-title">App Settings</div>
             <button id="btn-close-modal" class="close-btn">&times;</button>
           </div>
 

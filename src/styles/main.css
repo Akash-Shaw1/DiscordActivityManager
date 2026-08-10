@@ -32,7 +32,7 @@
   --radius-lg:12px;
   --radius-full:9999px;
 
-  --font-ui: -apple-system, "Segoe UI", "gg sans", "Noto Sans", Helvetica, Arial, sans-serif;
+  --font-ui: "gg sans", "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 @media (prefers-reduced-motion: reduce){

@@ -36,7 +36,7 @@ export class TemplateList {
           <span class="eyebrow">Presets library</span>
           <button id="btn-new-template" class="btn btn-primary btn-sm">+ New</button>
         </div>
-        <input type="text" id="inp-search" class="search" placeholder="🔍  Search presets…" value="${esc(this.filterQuery)}">
+        <input type="text" id="inp-search" class="search" placeholder="Search presets..." value="${esc(this.filterQuery)}">
         <div class="preset-list">
           ${filtered.length === 0 ? `<div style="text-align:center;padding:24px 0;color:var(--text-muted);font-size:13px;">${templates.length === 0 ? 'No presets yet. Click "+ New".' : 'No match.'}</div>` :
             filtered.map(t => {
