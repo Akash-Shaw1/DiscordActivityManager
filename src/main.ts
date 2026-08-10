@@ -70,7 +70,6 @@ class App {
     // 1. Subscribe to real-time Discord connection events FIRST (before any data loads)
     try {
       await api.listenStateChange((payload) => {
-        console.log("[Main] Received discord-state-changed event:", JSON.stringify(payload));
         this.currentStatus = payload;
         this.render();
       });
@@ -81,7 +80,6 @@ class App {
     // 2. Fetch initial connection status immediately
     try {
       const initialStatus = await api.getConnectionState();
-      console.log("[Main] Initial connection state:", JSON.stringify(initialStatus));
       this.currentStatus = initialStatus;
       this.render();
     } catch (e) {
@@ -100,11 +98,10 @@ class App {
       console.error("Failed loading app data:", e);
     }
 
-    // 4. Delayed re-fetch to catch race condition where Rust connects after initial fetch
+    // 4. Delayed re-fetch safety net
     setTimeout(async () => {
       try {
         const status = await api.getConnectionState();
-        console.log("[Main] Delayed status re-fetch:", JSON.stringify(status));
         this.currentStatus = status;
         this.render();
       } catch (_) { /* ignore */ }
