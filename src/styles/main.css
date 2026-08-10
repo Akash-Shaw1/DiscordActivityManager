@@ -144,6 +144,14 @@ body{
   cursor:pointer;transition:background-color .12s ease;
 }
 .preset-card:hover{background:#484a50;}
+.preset-card.selected{
+  border-color:rgba(76,140,255,.5);
+  background:#363942;
+}
+.preset-card.selected::before{
+  content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;
+  background:var(--text-muted);border-radius:0 3px 3px 0;
+}
 .preset-card.active{border-color:var(--brand);background:var(--brand-dim);}
 .preset-card.active::before{
   content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;

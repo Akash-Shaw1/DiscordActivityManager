@@ -127,6 +127,8 @@ class App {
 
   private async onApplyTemplate(template: Template) {
     try {
+      this.currentStatus.active_template_id = template.id;
+      this.render();
       await api.setActivity(template.activity, template.id);
     } catch (e) {
       console.error("Failed setting activity:", e);

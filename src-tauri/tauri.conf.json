@@ -13,9 +13,9 @@
     "windows": [
       {
         "title": "Discord Status Manager",
-        "width": 860,
-        "height": 680,
-        "resizable": true,
+        "width": 1080,
+        "height": 700,
+        "resizable": false,
         "fullscreen": false,
         "center": true
       }
