@@ -3,6 +3,7 @@ import { Template } from "../api";
 export class TemplateEditor {
   private container: HTMLElement;
   private currentTemplate: Template;
+  private activeTab: "general" | "art" | "buttons" = "general";
   private onSave: (template: Template) => void;
   private onApply: (template: Template) => void;
 
@@ -27,127 +28,146 @@ export class TemplateEditor {
 
     this.container.innerHTML = `
       <div class="editor-workspace">
-        <!-- Form Left -->
+        <!-- Form Left Column -->
         <div class="editor-form-panel">
-          <div class="panel-card">
-            <div class="panel-heading">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
-              Status Details & Configuration
-            </div>
-
-            <div class="form-grid">
-              <div class="form-group full-width">
-                <label>Preset Name</label>
-                <input type="text" id="inp-preset-name" value="${escapeAttr(this.currentTemplate.name)}" placeholder="e.g. Coding Session">
-              </div>
-
-              <div class="form-group">
-                <label>Application / Activity Name</label>
-                <input type="text" id="inp-act-name" value="${escapeAttr(act.name)}" placeholder="e.g. Visual Studio Code">
-              </div>
-
-              <div class="form-group">
-                <label>Activity Type</label>
-                <select id="inp-act-type">
-                  <option value="0" ${act.type === 0 ? "selected" : ""}>Playing</option>
-                  <option value="2" ${act.type === 2 ? "selected" : ""}>Listening</option>
-                  <option value="3" ${act.type === 3 ? "selected" : ""}>Watching</option>
-                  <option value="5" ${act.type === 5 ? "selected" : ""}>Competing</option>
-                </select>
-              </div>
-
-              <div class="form-group full-width">
-                <label>Details (Line 1)</label>
-                <input type="text" id="inp-act-details" value="${escapeAttr(act.details || "")}" placeholder="e.g. Working on Rust IPC protocol">
-              </div>
-
-              <div class="form-group full-width">
-                <label>State (Line 2)</label>
-                <input type="text" id="inp-act-state" value="${escapeAttr(act.state || "")}" placeholder="e.g. Workspace: discord-tracker">
-              </div>
-
-              <div class="form-group full-width" style="flex-direction: row; align-items: center; gap: 8px;">
-                <input type="checkbox" id="chk-show-timer" ${act.timestamps?.start ? "checked" : ""} style="width: 16px; height: 16px; cursor: pointer;">
-                <label for="chk-show-timer" style="cursor: pointer; text-transform: none; font-size: 13px; font-weight: 500;">Show Live Elapsed Time Timer</label>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel-card">
-            <div class="panel-heading">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
-                <circle cx="9" cy="9" r="2"/>
-                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
-              </svg>
-              Art Assets & Tooltips
-            </div>
-
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Large Image Key</label>
-                <input type="text" id="inp-large-img" value="${escapeAttr(assets.large_image || "")}" placeholder="Uploaded asset key">
-              </div>
-              <div class="form-group">
-                <label>Large Image Tooltip</label>
-                <input type="text" id="inp-large-txt" value="${escapeAttr(assets.large_text || "")}" placeholder="Hover text">
-              </div>
-              <div class="form-group">
-                <label>Small Image Key</label>
-                <input type="text" id="inp-small-img" value="${escapeAttr(assets.small_image || "")}" placeholder="Uploaded asset key">
-              </div>
-              <div class="form-group">
-                <label>Small Image Tooltip</label>
-                <input type="text" id="inp-small-txt" value="${escapeAttr(assets.small_text || "")}" placeholder="Hover text">
-              </div>
-            </div>
-          </div>
-
-          <div class="panel-card">
-            <div class="panel-heading">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-              </svg>
-              Custom Action Buttons (Max 2)
-            </div>
-
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Button 1 Label</label>
-                <input type="text" id="inp-btn1-label" value="${escapeAttr(btn1.label)}" placeholder="e.g. View GitHub Repo">
-              </div>
-              <div class="form-group">
-                <label>Button 1 URL</label>
-                <input type="text" id="inp-btn1-url" value="${escapeAttr(btn1.url)}" placeholder="https://github.com/...">
-              </div>
-
-              <div class="form-group">
-                <label>Button 2 Label</label>
-                <input type="text" id="inp-btn2-label" value="${escapeAttr(btn2.label)}" placeholder="e.g. Visit Website">
-              </div>
-              <div class="form-group">
-                <label>Button 2 URL</label>
-                <input type="text" id="inp-btn2-url" value="${escapeAttr(btn2.url)}" placeholder="https://example.com">
-              </div>
-            </div>
-          </div>
-
-          <div style="display: flex; gap: 12px; justify-content: flex-end;">
-            <button id="btn-save-preset" class="btn btn-secondary">Save Preset</button>
-            <button id="btn-apply-preset" class="btn btn-success">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-              Apply Status Now
+          <!-- Segmented Tab Navigation -->
+          <div class="editor-tabs-nav">
+            <button class="tab-btn ${this.activeTab === 'general' ? 'active' : ''}" data-tab="general">
+              📝 General Details
             </button>
+            <button class="tab-btn ${this.activeTab === 'art' ? 'active' : ''}" data-tab="art">
+              🖼️ Art & Media
+            </button>
+            <button class="tab-btn ${this.activeTab === 'buttons' ? 'active' : ''}" data-tab="buttons">
+              🔗 Action Buttons
+            </button>
+          </div>
+
+          <!-- Form Content Container -->
+          <div class="panel-card">
+            ${this.activeTab === 'general' ? `
+              <div class="panel-heading">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                General Status Configuration
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group full-width">
+                  <label>Preset Name</label>
+                  <input type="text" id="inp-preset-name" value="${escapeAttr(this.currentTemplate.name)}" placeholder="e.g. Coding Session">
+                </div>
+
+                <div class="form-group">
+                  <label>Application / Game Title</label>
+                  <input type="text" id="inp-act-name" value="${escapeAttr(act.name)}" placeholder="e.g. Visual Studio Code">
+                </div>
+
+                <div class="form-group">
+                  <label>Activity Type</label>
+                  <select id="inp-act-type">
+                    <option value="0" ${act.type === 0 ? "selected" : ""}>Playing a game</option>
+                    <option value="2" ${act.type === 2 ? "selected" : ""}>Listening to music</option>
+                    <option value="3" ${act.type === 3 ? "selected" : ""}>Watching stream</option>
+                    <option value="5" ${act.type === 5 ? "selected" : ""}>Competing in tournament</option>
+                  </select>
+                </div>
+
+                <div class="form-group full-width">
+                  <label>Details (Line 1)</label>
+                  <input type="text" id="inp-act-details" value="${escapeAttr(act.details || "")}" placeholder="e.g. Working on Rust IPC protocol">
+                </div>
+
+                <div class="form-group full-width">
+                  <label>State (Line 2)</label>
+                  <input type="text" id="inp-act-state" value="${escapeAttr(act.state || "")}" placeholder="e.g. Workspace: discord-tracker">
+                </div>
+
+                <div class="form-group full-width" style="flex-direction: row; align-items: center; gap: 10px; margin-top: 4px;">
+                  <input type="checkbox" id="chk-show-timer" ${act.timestamps?.start ? "checked" : ""} style="width: 16px; height: 16px; cursor: pointer;">
+                  <label for="chk-show-timer" style="cursor: pointer; text-transform: none; font-size: 13px; font-weight: 500;">Show Live Counting Elapsed Timer</label>
+                </div>
+              </div>
+            ` : ''}
+
+            ${this.activeTab === 'art' ? `
+              <div class="panel-heading">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                  <circle cx="9" cy="9" r="2"/>
+                  <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                </svg>
+                Art Assets & Tooltips
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Large Image Asset Key</label>
+                  <input type="text" id="inp-large-img" value="${escapeAttr(assets.large_image || "")}" placeholder="Uploaded asset key in Developer Portal">
+                </div>
+                <div class="form-group">
+                  <label>Large Image Hover Text</label>
+                  <input type="text" id="inp-large-txt" value="${escapeAttr(assets.large_text || "")}" placeholder="Hover tooltip text">
+                </div>
+                <div class="form-group">
+                  <label>Small Image Badge Key</label>
+                  <input type="text" id="inp-small-img" value="${escapeAttr(assets.small_image || "")}" placeholder="Uploaded asset key">
+                </div>
+                <div class="form-group">
+                  <label>Small Image Hover Text</label>
+                  <input type="text" id="inp-small-txt" value="${escapeAttr(assets.small_text || "")}" placeholder="Hover tooltip text">
+                </div>
+              </div>
+            ` : ''}
+
+            ${this.activeTab === 'buttons' ? `
+              <div class="panel-heading">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+                Custom Action Buttons (Max 2)
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Button 1 Label</label>
+                  <input type="text" id="inp-btn1-label" value="${escapeAttr(btn1.label)}" placeholder="e.g. View GitHub Repo">
+                </div>
+                <div class="form-group">
+                  <label>Button 1 URL</label>
+                  <input type="text" id="inp-btn1-url" value="${escapeAttr(btn1.url)}" placeholder="https://github.com/...">
+                </div>
+
+                <div class="form-group">
+                  <label>Button 2 Label</label>
+                  <input type="text" id="inp-btn2-label" value="${escapeAttr(btn2.label)}" placeholder="e.g. Visit Website">
+                </div>
+                <div class="form-group">
+                  <label>Button 2 URL</label>
+                  <input type="text" id="inp-btn2-url" value="${escapeAttr(btn2.url)}" placeholder="https://example.com">
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Action Footer -->
+            <div class="action-footer-bar">
+              <button id="btn-save-preset" class="btn btn-secondary">
+                💾 Save Preset
+              </button>
+              <button id="btn-apply-preset" class="btn btn-success">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Apply Status Now
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- Live Discord Card Preview Right -->
+        <!-- Live Discord Card Preview Right Column -->
         <div class="preview-panel">
           <div class="wumpus-banner-box">
             <img src="/src/assets/wumpus.png" class="wumpus-img" alt="Wumpus">
@@ -189,8 +209,8 @@ export class TemplateEditor {
                 <div class="activity-text-details">
                   <div class="activity-title" id="prev-act-title">${escapeHtml(act.name || "Application Name")}</div>
                   <div class="activity-line" id="prev-act-details">${escapeHtml(act.details || "Details line")}</div>
-                  <div class="activity-line" id="prev-act-state" style="color: var(--text-muted);">${escapeHtml(act.state || "State line")}</div>
-                  <div class="activity-line" id="prev-act-timer" style="color: var(--text-muted); font-size: 11px; margin-top: 2px;">00:00 elapsed</div>
+                  <div class="activity-line" id="prev-act-state" style="color: var(--discord-text-muted);">${escapeHtml(act.state || "State line")}</div>
+                  <div class="activity-line" id="prev-act-timer" style="color: var(--discord-text-muted); font-size: 11px; margin-top: 2px;">00:00 elapsed</div>
                 </div>
               </div>
 
@@ -205,21 +225,23 @@ export class TemplateEditor {
     `;
 
     this.attachEvents();
+    this.updatePreview();
   }
 
   public collectFormData(): Template {
     const getVal = (id: string) => (this.container.querySelector(`#${id}`) as HTMLInputElement | HTMLSelectElement)?.value?.trim() || "";
 
-    const name = getVal("inp-preset-name") || "Custom Status";
-    const actName = getVal("inp-act-name") || "Visual Studio Code";
-    const actType = parseInt(getVal("inp-act-type") || "0", 10);
-    const details = getVal("inp-act-details") || undefined;
-    const state = getVal("inp-act-state") || undefined;
+    // Read current input or fallback to existing currentTemplate field
+    const name = getVal("inp-preset-name") || this.currentTemplate.name || "Custom Status";
+    const actName = getVal("inp-act-name") || this.currentTemplate.activity.name || "Visual Studio Code";
+    const actType = getVal("inp-act-type") !== "" ? parseInt(getVal("inp-act-type"), 10) : this.currentTemplate.activity.type;
+    const details = getVal("inp-act-details") || this.currentTemplate.activity.details;
+    const state = getVal("inp-act-state") || this.currentTemplate.activity.state;
 
-    const largeImg = getVal("inp-large-img") || undefined;
-    const largeTxt = getVal("inp-large-txt") || undefined;
-    const smallImg = getVal("inp-small-img") || undefined;
-    const smallTxt = getVal("inp-small-txt") || undefined;
+    const largeImg = getVal("inp-large-img") || this.currentTemplate.activity.assets?.large_image;
+    const largeTxt = getVal("inp-large-txt") || this.currentTemplate.activity.assets?.large_text;
+    const smallImg = getVal("inp-small-img") || this.currentTemplate.activity.assets?.small_image;
+    const smallTxt = getVal("inp-small-txt") || this.currentTemplate.activity.assets?.small_text;
 
     let assets = undefined;
     if (largeImg || largeTxt || smallImg || smallTxt) {
@@ -231,16 +253,18 @@ export class TemplateEditor {
       };
     }
 
-    const l1 = getVal("inp-btn1-label");
-    const u1 = getVal("inp-btn1-url");
-    const l2 = getVal("inp-btn2-label");
-    const u2 = getVal("inp-btn2-url");
+    const l1 = getVal("inp-btn1-label") || this.currentTemplate.activity.buttons?.[0]?.label;
+    const u1 = getVal("inp-btn1-url") || this.currentTemplate.activity.buttons?.[0]?.url;
+    const l2 = getVal("inp-btn2-label") || this.currentTemplate.activity.buttons?.[1]?.label;
+    const u2 = getVal("inp-btn2-url") || this.currentTemplate.activity.buttons?.[1]?.url;
 
     const btns = [];
     if (l1 && u1) btns.push({ label: l1, url: u1 });
     if (l2 && u2) btns.push({ label: l2, url: u2 });
 
-    const showTimer = (this.container.querySelector("#chk-show-timer") as HTMLInputElement)?.checked;
+    const timerChk = this.container.querySelector("#chk-show-timer") as HTMLInputElement;
+    const showTimer = timerChk ? timerChk.checked : !!this.currentTemplate.activity.timestamps?.start;
+    // Always refresh timestamp start to current seconds when saving/applying with timer
     const timestamps = showTimer ? { start: Math.floor(Date.now() / 1000) } : undefined;
 
     this.currentTemplate = {
@@ -261,6 +285,17 @@ export class TemplateEditor {
   }
 
   private attachEvents() {
+    this.container.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        this.collectFormData();
+        const tab = (btn as HTMLElement).getAttribute("data-tab") as "general" | "art" | "buttons";
+        if (tab) {
+          this.activeTab = tab;
+          this.render();
+        }
+      });
+    });
+
     const bindInput = (id: string, callback: (val: string) => void) => {
       const el = this.container.querySelector(`#${id}`) as HTMLInputElement | HTMLSelectElement;
       if (el) {

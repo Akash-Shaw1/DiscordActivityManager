@@ -229,7 +229,14 @@ fn run_manager_loop(
                 if let Some(c) = client.as_mut() {
                     let pid = std::process::id();
                     match c.set_activity(pid, activity, &next_nonce()) {
-                        Ok(_) => {}
+                        Ok(_) => {
+                            let p_idx = c.pipe_index();
+                            let cid = c.client_id.clone();
+                            state = ConnectionState::Connected {
+                                pipe_index: p_idx,
+                                client_id: cid,
+                            };
+                        }
                         Err(e) => {
                             // Pipe might have broken
                             client = None;

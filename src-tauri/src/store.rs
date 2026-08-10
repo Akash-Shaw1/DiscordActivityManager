@@ -150,8 +150,33 @@ impl StoreManager {
                 if let Ok(mut data) = serde_json::from_str::<AppData>(&content) {
                     if data.settings.client_id == "1338573212879552594" || data.settings.client_id.trim().is_empty() {
                         data.settings.client_id = DEFAULT_CLIENT_ID.to_string();
-                        let _ = self.save(&data);
                     }
+                    // Sanitize old stale timestamps from stored presets
+                    let now = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_secs();
+                    for t in &mut data.templates {
+                        let mut clear_ts = false;
+                        if let Some(ts) = &mut t.activity.timestamps {
+                            if let Some(mut s) = ts.start {
+                                if s > 20_000_000_000 {
+                                    s /= 1000;
+                                }
+                                if s < 1735689600 || (now > s && now - s > 86400) {
+                                    clear_ts = true;
+                                } else {
+                                    ts.start = Some(s);
+                                }
+                            } else {
+                                clear_ts = true;
+                            }
+                        }
+                        if clear_ts {
+                            t.activity.timestamps = None;
+                        }
+                    }
+                    let _ = self.save(&data);
                     return data;
                 }
             }
