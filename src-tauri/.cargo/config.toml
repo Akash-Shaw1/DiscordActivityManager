@@ -1,0 +1,6 @@
+[build]
+jobs = 1
+incremental = false
+
+[env]
+CARGO_INCREMENTAL = "0"
