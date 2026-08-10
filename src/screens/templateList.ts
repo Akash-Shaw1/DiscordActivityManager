@@ -2,6 +2,7 @@ import { Template } from "../api";
 
 export class TemplateList {
   private container: HTMLElement;
+  private filterQuery: string = "";
   private onSelectTemplate: (template: Template) => void;
   private onApplyTemplate: (template: Template) => void;
   private onDeleteTemplate: (id: string) => void;
@@ -22,10 +23,17 @@ export class TemplateList {
   }
 
   public render(templates: Template[], activeId?: string, selectedId?: string) {
+    const query = this.filterQuery.toLowerCase();
+    const filtered = templates.filter(t => 
+      t.name.toLowerCase().includes(query) || 
+      t.activity.name.toLowerCase().includes(query) ||
+      (t.activity.details && t.activity.details.toLowerCase().includes(query))
+    );
+
     this.container.innerHTML = `
       <div class="sidebar">
         <div class="sidebar-header">
-          <span class="sidebar-title">Status Presets</span>
+          <span class="sidebar-title">Presets Library</span>
           <button id="btn-new-template" class="btn btn-primary btn-sm">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
               <path d="M12 5v14M5 12h14"/>
@@ -34,19 +42,24 @@ export class TemplateList {
           </button>
         </div>
 
+        <div class="search-box-container">
+          <input type="text" id="inp-search-presets" class="search-input" placeholder="🔍 Search presets..." value="${escapeHtml(this.filterQuery)}">
+        </div>
+
         <div class="template-scroll-list">
-          ${templates.length === 0 ? `
-            <div style="text-align: center; padding: 24px 12px; color: var(--text-muted); font-size: 13px;">
-              No status presets saved. Click "New" to create one.
+          ${filtered.length === 0 ? `
+            <div style="text-align: center; padding: 24px 12px; color: var(--discord-text-muted); font-size: 13px;">
+              ${templates.length === 0 ? 'No status presets saved. Click "New" to create one.' : 'No presets match your search.'}
             </div>
-          ` : templates.map(t => {
+          ` : filtered.map(t => {
             const isActive = activeId === t.id;
             const isSelected = selectedId === t.id;
             const details = t.activity.details || t.activity.state || "No description";
+            const icon = getActivityIcon(t.activity.type);
             return `
-              <div class="template-card ${isActive ? 'active' : ''}" data-id="${t.id}" style="${isSelected && !isActive ? 'border-color: var(--text-muted);' : ''}">
+              <div class="template-card ${isActive ? 'active' : ''}" data-id="${t.id}" style="${isSelected && !isActive ? 'border-color: var(--discord-text-muted);' : ''}">
                 <div class="template-name">
-                  <span>${escapeHtml(t.name)}</span>
+                  <span>${icon} ${escapeHtml(t.name)}</span>
                   ${isActive ? `<span class="active-pill">Active</span>` : ''}
                 </div>
                 <div class="template-subtitle">${escapeHtml(t.activity.name)} — ${escapeHtml(details)}</div>
@@ -62,6 +75,16 @@ export class TemplateList {
         </div>
       </div>
     `;
+
+    const searchInp = this.container.querySelector("#inp-search-presets") as HTMLInputElement;
+    if (searchInp) {
+      searchInp.addEventListener("input", (e) => {
+        this.filterQuery = (e.target as HTMLInputElement).value;
+        this.render(templates, activeId, selectedId);
+      });
+      // Maintain focus position
+      searchInp.selectionStart = searchInp.selectionEnd = searchInp.value.length;
+    }
 
     this.container.querySelector("#btn-new-template")?.addEventListener("click", () => {
       this.onCreateNew();
@@ -104,6 +127,16 @@ export class TemplateList {
         }
       });
     });
+  }
+}
+
+function getActivityIcon(type: number): string {
+  switch (type) {
+    case 0: return "🎮";
+    case 2: return "🎧";
+    case 3: return "📺";
+    case 5: return "🏆";
+    default: return "🎮";
   }
 }
 

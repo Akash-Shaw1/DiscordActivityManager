@@ -63,13 +63,26 @@ impl Default for AppData {
                     },
                 },
                 Template {
-                    id: "default-focus".to_string(),
-                    name: "Deep Focus Mode".to_string(),
+                    id: "default-minecraft".to_string(),
+                    name: "Minecraft Survival".to_string(),
                     activity: Activity {
-                        name: "Deep Focus".to_string(),
-                        details: Some("In the flow state".to_string()),
-                        state: Some("Do Not Disturb".to_string()),
-                        activity_type: 5, // Competing
+                        name: "Minecraft 1.20".to_string(),
+                        details: Some("Building Hardcore Survival Base".to_string()),
+                        state: Some("World: Singleplayer Hardcore".to_string()),
+                        activity_type: 0, // Playing
+                        timestamps: None,
+                        assets: None,
+                        buttons: None,
+                    },
+                },
+                Template {
+                    id: "default-valorant".to_string(),
+                    name: "VALORANT Ranked".to_string(),
+                    activity: Activity {
+                        name: "VALORANT".to_string(),
+                        details: Some("In Competitive Match".to_string()),
+                        state: Some("Ascent (11 - 9)".to_string()),
+                        activity_type: 0, // Playing
                         timestamps: None,
                         assets: None,
                         buttons: None,
@@ -77,12 +90,38 @@ impl Default for AppData {
                 },
                 Template {
                     id: "default-listening".to_string(),
-                    name: "Listening to Synthwave".to_string(),
+                    name: "Listening to Lofi Beats".to_string(),
                     activity: Activity {
-                        name: "Lofi Synthwave".to_string(),
-                        details: Some("Midnight Chill Mix".to_string()),
-                        state: Some("Track 04 / 12".to_string()),
+                        name: "Lofi Hip Hop Radio".to_string(),
+                        details: Some("Beats to Relax / Study to".to_string()),
+                        state: Some("Track 04 — Midnight Chill".to_string()),
                         activity_type: 2, // Listening
+                        timestamps: None,
+                        assets: None,
+                        buttons: None,
+                    },
+                },
+                Template {
+                    id: "default-watching".to_string(),
+                    name: "Watching YouTube / Streams".to_string(),
+                    activity: Activity {
+                        name: "YouTube".to_string(),
+                        details: Some("Watching Tech Docs & Tutorials".to_string()),
+                        state: Some("1080p 60fps HD".to_string()),
+                        activity_type: 3, // Watching
+                        timestamps: None,
+                        assets: None,
+                        buttons: None,
+                    },
+                },
+                Template {
+                    id: "default-focus".to_string(),
+                    name: "Deep Focus Mode".to_string(),
+                    activity: Activity {
+                        name: "Deep Focus".to_string(),
+                        details: Some("In the Flow State".to_string()),
+                        state: Some("Do Not Disturb".to_string()),
+                        activity_type: 5, // Competing
                         timestamps: None,
                         assets: None,
                         buttons: None,

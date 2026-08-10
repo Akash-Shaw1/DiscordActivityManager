@@ -149,7 +149,15 @@ export class TemplateEditor {
 
         <!-- Live Discord Card Preview Right -->
         <div class="preview-panel">
-          <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">
+          <div class="wumpus-banner-box">
+            <img src="/src/assets/wumpus.png" class="wumpus-img" alt="Wumpus">
+            <div>
+              <div style="font-size: 13px; font-weight: 700; color: white;">Native Discord RPC</div>
+              <div style="font-size: 11px; color: var(--discord-text-muted);">Real-time presence engine powered by Rust named-pipe transport.</div>
+            </div>
+          </div>
+
+          <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--discord-text-muted); letter-spacing: 0.5px;">
             Live Profile Preview
           </div>
 
@@ -318,12 +326,14 @@ export class TemplateEditor {
     this.container.querySelector("#btn-save-preset")?.addEventListener("click", () => {
       const t = this.collectFormData();
       this.onSave(t);
+      showToast("✨ Preset saved!");
     });
 
     this.container.querySelector("#btn-apply-preset")?.addEventListener("click", () => {
       const t = this.collectFormData();
       this.onSave(t);
       this.onApply(t);
+      showToast("🚀 Status applied to Discord!");
     });
   }
 
@@ -362,6 +372,24 @@ export class TemplateEditor {
       prevBtns.innerHTML = btns.map(b => `<div class="discord-preview-btn">${escapeHtml(b.label)}</div>`).join('');
     }
   }
+}
+
+function showToast(message: string) {
+  let container = document.querySelector(".toast-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.className = "toast-container";
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.innerHTML = `<span>${message}</span>`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.remove();
+  }, 3000);
 }
 
 function getActivityTypeLabel(type: number): string {
