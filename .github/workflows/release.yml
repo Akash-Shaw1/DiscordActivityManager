@@ -39,7 +39,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'latest' }}
-          releaseName: ${{ github.ref_type == 'tag' && format('Release {0}', github.ref_name) || 'Latest Developer Build' }}
-          releaseBody: ${{ github.ref_type == 'tag' && 'Official release version.' || 'Automatic pre-release build of the latest commit on main.' }}
+          releaseName: ${{ github.ref_type == 'tag' && format('Release {0}', github.ref_name) || 'v0.1.7 — Latest Developer Build' }}
+          releaseBody: |
+            ## 🎮 Discord Status Manager
+
+            Native Windows Custom Discord Rich Presence Manager built with Tauri 2.0 & TypeScript.
+
+            ### ✨ Features
+            - **⚡ Native RPC Connection:** Connects directly to Discord's local IPC pipe with zero overhead.
+            - **📌 System Tray Controls:** Left-click restores the app window; right-click opens the full context menu (*Quit*, *Open Window*, *Disconnect*).
+            - **💾 Custom Presets & Templates:** Save, manage, and toggle activity templates seamlessly.
+            - **🚀 Auto-Start & Tray Launch:** Option to run automatically on Windows startup and start minimized to tray.
+
+            ---
+            *Automated Release Build generated via GitHub Actions CI/CD.*
           releaseDraft: false
           prerelease: ${{ github.ref_type != 'tag' }}

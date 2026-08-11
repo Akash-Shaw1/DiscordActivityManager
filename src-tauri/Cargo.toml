@@ -1,6 +1,6 @@
 [package]
 name = "discord-status-manager"
-version = "0.1.0"
+version = "0.1.7"
 description = "Native Windows Custom Discord Rich Presence Manager"
 authors = ["Discord Status Manager Team"]
 edition = "2021"
