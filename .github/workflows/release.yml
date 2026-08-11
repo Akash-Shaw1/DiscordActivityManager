@@ -1,0 +1,45 @@
+name: Release Build
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'npm'
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install Frontend dependencies
+        run: npm ci
+
+      - name: Build and release Tauri App
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'latest' }}
+          releaseName: ${{ github.ref_type == 'tag' && format('Release {0}', github.ref_name) || 'Latest Developer Build' }}
+          releaseBody: ${{ github.ref_type == 'tag' && 'Official release version.' || 'Automatic pre-release build of the latest commit on main.' }}
+          releaseDraft: false
+          prerelease: ${{ github.ref_type != 'tag' }}

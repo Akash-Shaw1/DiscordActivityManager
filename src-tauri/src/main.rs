@@ -11,7 +11,7 @@ use commands::*;
 use manager::DiscordManagerHandle;
 use store::StoreManager;
 use tauri::menu::{Menu, MenuItem};
-use tauri::tray::{TrayIconBuilder, TrayIconEvent};
+use tauri::tray::{TrayIconBuilder, TrayIconEvent, MouseButton};
 use tauri::Manager;
 
 fn main() {
@@ -45,6 +45,7 @@ fn main() {
             let default_icon = app.default_window_icon().cloned();
             let mut builder = TrayIconBuilder::new()
                 .menu(&menu)
+                .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "show" => {
                         if let Some(window) = app.get_webview_window("main") {
@@ -64,7 +65,7 @@ fn main() {
                     _ => {}
                 })
                 .on_tray_icon_event(|tray, event| {
-                    if let TrayIconEvent::Click { .. } = event {
+                    if let TrayIconEvent::Click { button: MouseButton::Left, .. } = event {
                         let app = tray.app_handle();
                         if let Some(window) = app.get_webview_window("main") {
                             let _ = window.show();
